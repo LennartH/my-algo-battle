@@ -1,1 +1,4 @@
 algo-battle
+keras
+tensorflow
+numpy
