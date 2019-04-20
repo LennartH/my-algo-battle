@@ -1,4 +1,3 @@
 algo-battle
-keras
-tensorflow
+torch
 numpy
