@@ -35,6 +35,12 @@ class DotSlow(SleepWrapper):
         super().__init__(Dot, slow_sleep_time)
 
 
+class ZufallFast(SleepWrapper):
+
+    def __init__(self):
+        super().__init__(Zufall, fast_sleep_time)
+
+
 class ZufallMedium(SleepWrapper):
 
     def __init__(self):
