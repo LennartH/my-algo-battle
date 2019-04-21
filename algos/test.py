@@ -6,31 +6,36 @@ from algo_battle.util.builtin_algorithmen import Zufall
 from util import SleepWrapper
 
 
-class Punkt(Algorithmus):
+class Dot(Algorithmus):
 
     def _gib_richtung(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
         return self.richtung.drehe_nach_rechts()
 
 
-class PunktSchnell(SleepWrapper):
+fast_sleep_time = 0.005
+medium_sleep_time = 0.025
+slow_sleep_time = 0.1
+
+
+class DotFast(SleepWrapper):
 
     def __init__(self):
-        super().__init__(Punkt, 0.005)
+        super().__init__(Dot, fast_sleep_time)
 
 
-class PunktMittel(SleepWrapper):
-
-    def __init__(self):
-        super().__init__(Punkt, 0.025)
-
-
-class PunktLangsam(SleepWrapper):
+class DotMedium(SleepWrapper):
 
     def __init__(self):
-        super().__init__(Punkt, 0.1)
+        super().__init__(Dot, medium_sleep_time)
 
 
-class ZufallMittel(SleepWrapper):
+class DotSlow(SleepWrapper):
 
     def __init__(self):
-        super().__init__(Zufall, 0.025)
+        super().__init__(Dot, slow_sleep_time)
+
+
+class ZufallMedium(SleepWrapper):
+
+    def __init__(self):
+        super().__init__(Zufall, medium_sleep_time)
