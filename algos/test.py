@@ -19,7 +19,7 @@ class Debug(Algorithmus):
         return self.richtung.drehe_nach_links()
 
 
-very_fast_sleep_time = 0.0025
+very_fast_sleep_time = 0.001
 fast_sleep_time = 0.005
 medium_sleep_time = 0.025
 slow_sleep_time = 0.1
