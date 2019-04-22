@@ -8,6 +8,7 @@ import algo_battle.util
 import datetime as dt
 import test
 
+from typing import Callable
 from algo_battle.domain import ArenaDefinition, FeldZustand
 from algo_battle.domain.wettkampf import Wettkampf
 from algo_battle.domain.util import EventStatistiken
@@ -19,7 +20,7 @@ from training.optimizer import Optimizer
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model_state_path = ""
+    model_state_path = get_most_recent_model_state_file()
     kernel_size = 10
 
     policy_model = Snek1DModel(in_channels=Movement.size(), kernel_size=kernel_size, out_features=len(directions)).to(device)
@@ -76,6 +77,14 @@ def main():
     logger().info(f"Training complete\n{training_stats.zusammenfassung}\n{training_stats.daten}")
 
 
+def get_most_recent_model_state_file(directory="models") -> str:
+    file_paths = []
+    for file_name in os.listdir(directory):
+        if file_name.lower().endswith(".pth"):
+            file_paths.append(os.path.join(directory, file_name))
+    return max(file_paths, key=os.path.getctime)
+
+
 def save_training(policy_model: Snek1DModel, training_stats: EventStatistiken, directory="models"):
     timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     file_name = f"snek1d_{timestamp}"
@@ -103,16 +112,25 @@ class TrainableSnek1D(Snek1D):
         latest_result = state.past_movements[-1].result
 
         if latest_result == FeldZustand.Frei:
-            return 1
-        if latest_result == FeldZustand.Besucht:
-            return -0.1
+            reward = 1
+        elif latest_result == FeldZustand.Besucht:
+            reward = self._cumulative_reward(-0.1, -0.5, lambda s: s == FeldZustand.Besucht, lambda r: r - 0.5)
+        else:
+            reward = self._cumulative_reward(-0.1, -2, lambda s: s.ist_blockiert, lambda r: 2*r)
 
+        logger().debug(f"{latest_result.name}: {reward}")
+        return reward
+
+    def _cumulative_reward(self, initial_reward: float, successive_reward: float, predicate: Callable[[FeldZustand], bool], reward_function: Callable[[float], float]) -> float:
+        state: Snek1DState = self._state
+        reward = initial_reward
         movement = state.past_movements[-2]
-        reward = -0.1 if movement is None or movement.result.ist_betretbar else -2
-        index = -3
-        while state.past_movements[index] is not None and state.past_movements[index].result.ist_blockiert:
-            reward *= 2
-            index -= 1
+        if movement is not None and predicate(movement.result):
+            reward = successive_reward
+            index = -3
+            while state.past_movements[index] is not None and predicate(state.past_movements[index].result):
+                reward = reward_function(reward)
+                index -= 1
         return reward
 
 
