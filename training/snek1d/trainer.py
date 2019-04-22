@@ -41,7 +41,7 @@ def main():
     memory = Memory(arena_definition.punkte_maximum * matches_to_keep_in_memory)
     optimizer = Optimizer(memory, policy_model, target_model, device, gamma=0.995)
 
-    number_of_matches = 25
+    number_of_matches = 250
     optimizer_batch_size = 512
     time_between_optimizations = 0.2
     # possible_competitors = [test.Debug]
@@ -112,7 +112,7 @@ class TrainableSnek1D(Snek1D):
         latest_result = state.past_movements[-1].result
 
         if latest_result == FeldZustand.Frei:
-            reward = 1
+            reward = 10
         elif latest_result == FeldZustand.Besucht:
             reward = self._cumulative_reward(-0.1, -0.5, lambda s: s == FeldZustand.Besucht, lambda r: r - 0.5)
         else:
@@ -128,7 +128,7 @@ class TrainableSnek1D(Snek1D):
         if movement is not None and predicate(movement.result):
             reward = successive_reward
             index = -3
-            while state.past_movements[index] is not None and predicate(state.past_movements[index].result):
+            while abs(index) <= len(state.past_movements) and state.past_movements[index] is not None and predicate(state.past_movements[index].result):
                 reward = reward_function(reward)
                 index -= 1
         return reward
