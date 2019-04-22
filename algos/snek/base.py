@@ -45,19 +45,20 @@ def int_to_field_state(value: int) -> FeldZustand:
 
 class SnekBase(Algorithmus):
 
-    epsilon_start = 0.9
-    epsilon_end = 0.025
-    epsilon_decay = 0.09
+    EPSILON_START = 0.9
+    EPSILON_END = 0.025
+    EPSILON_DECAY = 0.09
 
     min_exploration_steps = 3
     max_exploration_steps = 20
 
-    def __init__(self, model: nn.Module):
+    def __init__(self, model: nn.Module, epsilon_decay: float = None):
         super().__init__(name="Snek")
         self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._model = model.to(self._device)
         self._state: StateBase = None
-        self._epsilon = self.epsilon_start
+        self._epsilon_decay = epsilon_decay if epsilon_decay else SnekBase.EPSILON_DECAY
+        self._epsilon = self.EPSILON_START
 
         self._max_turns = -1
         self._exploration_steps = -1
@@ -108,7 +109,7 @@ class SnekBase(Algorithmus):
             return action_to_direction(action)
 
     def _calculate_epsilon(self, turn: int) -> float:
-        return self.epsilon_end + (self.epsilon_start - self.epsilon_end) * math.exp(-(turn / self._max_turns) * (self.epsilon_decay * 100))
+        return self.EPSILON_END + (self.EPSILON_START - self.EPSILON_END) * math.exp(-(turn / self._max_turns) * (self._epsilon_decay * 100))
 
     def _start_exploration(self, turn: int) -> int:
         mode = self.max_exploration_steps - (self.max_exploration_steps - self.min_exploration_steps) * (turn / self._max_turns)

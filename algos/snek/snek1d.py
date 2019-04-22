@@ -11,8 +11,8 @@ from snek.base import SnekBase, directions, StateBase, direction_to_action, fiel
 
 class Snek1D(SnekBase):
 
-    def __init__(self, model: "Snek1DModel", state_length=128):
-        super().__init__(model)
+    def __init__(self, model: "Snek1DModel", state_length=128, epsilon_decay: float = None):
+        super().__init__(model, epsilon_decay)
         self._state_length = state_length
         self._previous_distances = (0, 0, 0, 0)
 

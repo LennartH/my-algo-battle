@@ -22,6 +22,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_state_path = get_most_recent_model_state_file()
     kernel_size = 10
+    epsilon_decay = 0.125
 
     policy_model = Snek1DModel(in_channels=Movement.size(), kernel_size=kernel_size, out_features=len(directions)).to(device)
     if model_state_path and os.path.isfile(model_state_path):
@@ -51,7 +52,7 @@ def main():
         logger().info(f"Starting match {match_number}")
         match = Wettkampf(
             arena_definition.punkte_maximum, arena_definition,
-            [TrainableSnek1D(policy_model, memory), random.choice(possible_competitors)()]
+            [TrainableSnek1D(policy_model, memory, epsilon_decay), random.choice(possible_competitors)()]
         )
 
         match.start()
@@ -95,8 +96,8 @@ def save_training(policy_model: Snek1DModel, training_stats: EventStatistiken, d
 
 class TrainableSnek1D(Snek1D):
 
-    def __init__(self, model: Snek1DModel, memory: Memory):
-        super().__init__(model)
+    def __init__(self, model: Snek1DModel, memory: Memory, epsilon_decay: float):
+        super().__init__(model, epsilon_decay=epsilon_decay)
         self._memory = memory
 
     def _update_state(self, action_result: FeldZustand, turn: int, points: int):
