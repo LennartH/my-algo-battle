@@ -1,7 +1,6 @@
 import math
 import random
 
-import numpy as np
 import torch
 from torch import nn as nn
 
@@ -11,7 +10,37 @@ from algo_battle.domain.algorithmus import Algorithmus
 
 
 directions = [Richtung.Oben, Richtung.Rechts, Richtung.Unten, Richtung.Links]
+
+
+def direction_to_action(direction: Richtung) -> int:
+    if direction is None:
+        return -1
+    else:
+        return directions.index(direction)
+
+
+def action_to_direction(action: int) -> Richtung:
+    if 0 <= action < len(directions):
+        return directions[action]
+    else:
+        return None
+
+
 field_states = [FeldZustand.Frei, FeldZustand.Wand, FeldZustand.Belegt, FeldZustand.Besucht]
+
+
+def field_state_to_int(field_state: FeldZustand) -> int:
+    if field_state is None:
+        return -1
+    else:
+        return field_states.index(field_state)
+
+
+def int_to_field_state(value: int) -> FeldZustand:
+    if 0 <= value < len(field_states):
+        return field_states[value]
+    else:
+        return None
 
 
 class SnekBase(Algorithmus):
@@ -75,8 +104,8 @@ class SnekBase(Algorithmus):
                 for i, v in enumerate(prediction):
                     if v == maximum:
                         indices.append(i)
-                index = random.choice(indices)
-            return directions[index]
+                action = random.choice(indices)
+            return action_to_direction(action)
 
     def _calculate_epsilon(self, turn: int) -> float:
         return self.epsilon_end + (self.epsilon_start - self.epsilon_end) * math.exp(-(turn / self._max_turns) * (self.epsilon_decay * 100))
@@ -94,13 +123,8 @@ class SnekBase(Algorithmus):
 
 class StateBase(ABC):
 
-    def as_tensor(self, device) -> torch.Tensor:
-        data = self._as_array()
-        tensor: torch.Tensor = torch.from_numpy(data)
-        return tensor.to(device)
-
     @abstractmethod
-    def _as_array(self) -> np.ndarray:
+    def as_tensor(self, device) -> torch.Tensor:
         pass
 
     @abstractmethod

@@ -12,9 +12,23 @@ class Dot(Algorithmus):
         return self.richtung.drehe_nach_rechts()
 
 
+class Debug(Algorithmus):
+
+    def _gib_richtung(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
+        time.sleep(10)
+        return self.richtung.drehe_nach_links()
+
+
+very_fast_sleep_time = 0.0025
 fast_sleep_time = 0.005
 medium_sleep_time = 0.025
 slow_sleep_time = 0.1
+
+
+class DotVeryFast(SleepWrapper):
+
+    def __init__(self):
+        super().__init__(Dot, very_fast_sleep_time)
 
 
 class DotFast(SleepWrapper):
