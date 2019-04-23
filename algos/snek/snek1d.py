@@ -77,8 +77,8 @@ class Snek1DState(StateBase):
             else:
                 movement_array = [
                     *movement.distances,
-                    direction_to_action(movement.direction),
-                    field_state_to_int(movement.result)
+                    direction_to_action(movement.direction) + 1,
+                    field_state_to_int(movement.result) + 1
                 ]
             packed.append(movement_array)
         return np.asarray(packed)
