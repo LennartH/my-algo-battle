@@ -88,7 +88,7 @@ class SnekBase(Algorithmus):
         if self._exploration_steps <= 0:
             if random.random() <= self._epsilon:
                 except_directions = None if self._exploration_steps == -1 else [self.richtung, self.richtung.gegenteil]
-                self._exploration_steps = self._start_exploration(zug_nummer)
+                self._exploration_steps = 1  # self._start_exploration(zug_nummer)
                 self._richtung = Richtung.zufall(ausser=except_directions)
             else:
                 self._exploration_steps = -1
