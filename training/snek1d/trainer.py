@@ -44,7 +44,7 @@ def main():
     memory = Memory(arena_definition.punkte_maximum * matches_to_keep_in_memory)
     optimizer = Optimizer(memory, policy_model, target_model, device, gamma=0.995)
 
-    number_of_matches = 50
+    number_of_matches = 500
     optimizer_batch_size = 512
     time_between_optimizations = 0.2
     training_stats = EventStatistiken()
@@ -52,7 +52,7 @@ def main():
         logger().info(f"Starting match {match_number}")
         match = Wettkampf(
             arena_definition.punkte_maximum, arena_definition,
-            [TrainableSnek1D(policy_model, memory, epsilon_decay), SleepWrapper(test.Dot, 0.0025)]
+            [TrainableSnek1D(policy_model, memory, epsilon_decay), SleepWrapper(test.Dot, test.very_fast_sleep_time)]
         )
 
         match.start()
