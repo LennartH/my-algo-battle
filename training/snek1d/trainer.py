@@ -1,4 +1,5 @@
 import os
+
 import torch
 import random
 import logging.config
@@ -8,10 +9,11 @@ import algo_battle.util
 import datetime as dt
 import test
 
-from typing import Callable
+from typing import Callable, Optional
 from algo_battle.domain import ArenaDefinition, FeldZustand
 from algo_battle.domain.wettkampf import Wettkampf
 from algo_battle.domain.util import EventStatistiken
+from util import SleepWrapper
 from snek.base import directions, direction_to_action
 from snek.snek1d import Snek1D, Snek1DModel, Movement, Snek1DState
 from training.memory import Memory
@@ -42,17 +44,15 @@ def main():
     memory = Memory(arena_definition.punkte_maximum * matches_to_keep_in_memory)
     optimizer = Optimizer(memory, policy_model, target_model, device, gamma=0.995)
 
-    number_of_matches = 250
+    number_of_matches = 50
     optimizer_batch_size = 512
     time_between_optimizations = 0.2
-    # possible_competitors = [test.Debug]
-    possible_competitors = [test.DotVeryFast]
     training_stats = EventStatistiken()
     for match_number in range(1, number_of_matches + 1):
         logger().info(f"Starting match {match_number}")
         match = Wettkampf(
             arena_definition.punkte_maximum, arena_definition,
-            [TrainableSnek1D(policy_model, memory, epsilon_decay), random.choice(possible_competitors)()]
+            [TrainableSnek1D(policy_model, memory, epsilon_decay), SleepWrapper(test.Dot, 0.0025)]
         )
 
         match.start()
@@ -78,11 +78,13 @@ def main():
     logger().info(f"Training complete\n{training_stats.zusammenfassung}\n{training_stats.daten}")
 
 
-def get_most_recent_model_state_file(directory="models") -> str:
+def get_most_recent_model_state_file(directory="models") -> Optional[str]:
     file_paths = []
     for file_name in os.listdir(directory):
         if file_name.lower().endswith(".pth"):
             file_paths.append(os.path.join(directory, file_name))
+    if not file_paths:
+        return None
     return max(file_paths, key=os.path.getctime)
 
 
@@ -140,6 +142,7 @@ def logger():
 
 
 if __name__ == "__main__":
-    with open("..\\logging_config.yml") as f:
+    with open(os.path.join("..", "logging_config.yml")) as f:
         logging.config.dictConfig(yaml.full_load(f))
+    os.makedirs("models", exist_ok=True)
     main()
