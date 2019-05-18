@@ -1,8 +1,11 @@
 import logging
 
 from enum import Enum, auto
+from typing import Dict, Any, Callable, Iterable, Optional
+
 from algo_battle.domain import FeldZustand, Richtung
 from algo_battle.domain.algorithmus import Algorithmus
+from .base import StateBasedAlgorithm
 
 logging.basicConfig(style="{", format="{levelname: >8} - {name}: {message}", level=logging.INFO)
 
@@ -16,30 +19,36 @@ class Mode(Enum):
     Divide = auto()
 
 
-class DivideAndConquer(Algorithmus):
+class DivideAndConquer(StateBasedAlgorithm):
 
     def __init__(self):
         super().__init__("Teile und Herrsche")
         self._current_rect = None
-        self._mode = Mode.SeekCenter
-        self._actions_by_mode = {
+
+    def _bereite_vor(self):
+        super()._bereite_vor()
+        self._current_rect = (0, 0, *self.arena.form)
+
+    def _get_initial_state(self) -> Any:
+        return Mode.SeekCenter
+
+    def _create_actions_by_state(self) -> Dict[Any, Callable[[FeldZustand, int, int], Richtung]]:
+        return {
             Mode.SeekCenter: self._seek_center,
             Mode.Divide: self._divide_rect
         }
 
-    def _bereite_vor(self):
-        self._current_rect = (0, 0, *self.arena.form)
+    def _create_state_transitions(self) -> Dict[Any, Iterable[Callable[[FeldZustand, int, int], Optional[Any]]]]:
+        return {
+            Mode.SeekCenter: [
+                lambda s, t, p: Mode.Divide if self._center_reached() else None
+            ]
+        }
 
-    def _gib_richtung(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
-        return self._actions_by_mode[self._mode](letzter_zustand, zug_nummer, aktuelle_punkte)
-
-    def _seek_center(self, *args) -> Richtung:
+    def _seek_center(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
         # TODO Handle blockades
         distances = [self._distance_in_rect(d) for d in _directions]
-        next_direction = _directions[distances.index(max(distances))]
-        if self._center_reached():
-            self._mode = Mode.Divide
-        return next_direction
+        return _directions[distances.index(max(distances))]
 
     def _divide_rect(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
         if letzter_zustand.ist_blockiert:
