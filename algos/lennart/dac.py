@@ -1,14 +1,8 @@
-import logging
-import time
-
 from enum import Enum, auto
 from typing import Dict, Any, Callable, Iterable, Optional, Tuple
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from algo_battle.domain import FeldZustand, Richtung
-from algo_battle.domain.algorithmus import Algorithmus
-from .base import StateBasedAlgorithm
-
-logging.basicConfig(style="{", format="{levelname: >8} - {name}: {message}", level=logging.INFO)
+from .base import StateBasedAlgorithm, Rect
 
 
 class Mode(Enum):
@@ -18,32 +12,41 @@ class Mode(Enum):
     SwitchRect = auto()
 
 
-@dataclass(frozen=True)
-class Rect:
-    x: int
-    y: int
-    width: int
-    height: int
-
-    @property
-    def size(self) -> Tuple[int, int]:
-        return self.width, self.height
-
-    def distance(self, position: Tuple[int, int], direction: Richtung) -> int:
-        if direction is Richtung.Oben:
-            return position[1] - self.y
-        if direction is Richtung.Rechts:
-            return self.width + self.x - position[0]
-        if direction is Richtung.Unten:
-            return self.height + self.y - position[1]
-        if direction is Richtung.Links:
-            return position[0] - self.x
-
-    def is_on_border(self, position: Tuple[int, int]) -> bool:
-        return position[0] <= self.x or position[1] <= self.y or position[0] >= self.x + self.width or position[1] >= self.y + self.height
-
-
 class DivideAndConquer(StateBasedAlgorithm):
+
+    def __init__(self):
+        super().__init__("Teile und Herrsche")
+        self._current_rect: Optional[Rect] = None
+        self._blockades_hit = 0
+        self._center_line_reached = False
+
+    def _get_initial_state(self) -> Any:
+        return Mode.Divide
+
+    def _create_actions_by_state(self) -> Dict[Any, Callable[[FeldZustand, int, int], Richtung]]:
+        return {
+            Mode.Divide: self._divide_rect
+        }
+
+    def _create_state_transitions(self) -> Dict[Any, Iterable[Callable[[FeldZustand, int, int], Optional[Any]]]]:
+        return {}
+
+    def _bereite_vor(self):
+        super()._bereite_vor()
+        self._current_rect = Rect(0, 0, *self.arena.form)
+        distance_to_center = self._current_rect.center - self.position
+        abs_distance_to_center = abs(distance_to_center)
+        if abs_distance_to_center.x < abs_distance_to_center.y:
+            self._richtung = Richtung.Links if distance_to_center.x < 0 else Richtung.Rechts
+        else:
+            self._richtung = Richtung.Oben if distance_to_center.y < 0 else Richtung.Unten
+
+    def _divide_rect(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
+
+        return self.richtung
+
+
+class DivideAndConquerOld(StateBasedAlgorithm):
 
     def __init__(self):
         super().__init__("Teile und Herrsche")
@@ -51,10 +54,6 @@ class DivideAndConquer(StateBasedAlgorithm):
         self._divide_directions = [Richtung.Oben, Richtung.Unten, Richtung.Links, Richtung.Rechts]
         self._blockades_hit = 0
         self._centers_reached = 0
-
-    @property
-    def position(self) -> Tuple[int, int]:
-        return self._x, self._y
 
     def _bereite_vor(self):
         super()._bereite_vor()
@@ -126,16 +125,3 @@ class DivideAndConquer(StateBasedAlgorithm):
         if center_reached:
             self._centers_reached += 1
         return center_reached
-
-
-class Dot(Algorithmus):
-
-    def _gib_richtung(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
-        return self.richtung.drehe_nach_rechts()
-
-
-class Debug(Algorithmus):
-
-    def _gib_richtung(self, letzter_zustand: FeldZustand, zug_nummer: int, aktuelle_punkte: int) -> Richtung:
-        time.sleep(10)
-        return self.richtung.drehe_nach_links()
