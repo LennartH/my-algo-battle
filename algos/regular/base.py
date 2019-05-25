@@ -5,6 +5,7 @@ from algo_battle.domain import FeldZustand, Richtung
 from algo_battle.domain.algorithmus import Algorithmus
 
 
+# TODO Own class for States
 class StateBasedAlgorithm(Algorithmus):
 
     # noinspection PyTypeChecker
@@ -131,3 +132,7 @@ class Rect:
 
     def is_on_border(self, position: Point) -> bool:
         return position.x <= self.x or position.y <= self.y or position.x >= self.x + self.width or position.y >= self.y + self.height
+
+    def direction_to_center(self, position: Point) -> List[Richtung]:
+        # TODO
+        pass
