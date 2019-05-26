@@ -1,11 +1,12 @@
 import logging
 
-from .cao import ChaosAndOrder as CaO
+from .state_based_algorithm import StateBasedAlgorithm
+from .cao import Chaos, Order
 
 logging.basicConfig(style="{", format="{levelname: >8} - {name}: {message}", level=logging.INFO)
 
 
-class ChaosAndOrder(CaO):
+class ChaosAndOrder(StateBasedAlgorithm):
 
     def __init__(self):
-        super().__init__(0.4)
+        super().__init__(Chaos(0.4), Order())
